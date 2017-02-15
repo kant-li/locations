@@ -13,6 +13,10 @@ def locatebyLatLng(lat, lng, pois=0):
     根据经纬度查询地址
     '''
     #这里使用了网上找到的一个ak，百度上注册使用需要身份证号码，暂时就算了
+    info = '正在查询' + str(lat) + ', ' + str(lng)
+    runInfo.set(info)
+    root.update()
+
     items = {'location': str(lat) + ',' + str(lng), 'ak': 'A9f77664caa0b87520c3708a6750bbdb', 'output': 'json'}
     res = requests.get('http://api.map.baidu.com/geocoder/v2/', params=items)
     result = res.json()
@@ -27,6 +31,7 @@ def latlngReader(excelFile):
 	info = '读取文件中...'
 	runInfo.set(info)
 	root.update()
+
 	#打开报表
 	data = xlrd.open_workbook(excelFile)
 	try:
@@ -77,10 +82,17 @@ def locatebyAddress(address):
 	'''
 	根据地址确定经纬度
 	'''
+	info = '正在查询' + str(address)
+	runInfo.set(info)
+	root.update()
+
 	items = {'output': 'json', 'ak': 'A9f77664caa0b87520c3708a6750bbdb', 'address': address}
-	res = requests.get('http://api.map.baidu.com/geocoder/v2/', params=items)
-	result = res.json()
-	result = result['result']['location']
+	try:
+		res = requests.get('http://api.map.baidu.com/geocoder/v2/', params=items, timeout=5)
+		result = res.json()
+		result = result['result']['location']
+	except:
+		result = {lng: '抱歉，度娘说她不知道！', lat: ''}
 	return result
 
 def addressReader(excelFile):
@@ -102,6 +114,8 @@ def addressReader(excelFile):
 	nws = nwb.add_sheet('result')
 	info = '正在问度娘...'
 	runInfo.set(info)
+	root.update()
+
 	for i in range(row_num):
 		if i == 0:
 			nws.write(0,0,'地址')
@@ -123,6 +137,8 @@ def addressReader(excelFile):
 	outputPath = pathStr + '经纬度结果.xls'
 	info = ('结果存储在：' + outputPath)
 	runInfo.set(info)
+	root.update()
+
 	nwb.save(outputPath)
 
 #-------------------------------------------------------
@@ -182,7 +198,7 @@ ttk.Label(mainframe,textvariable = fp,width = 40).grid(column = 1, row = 1, stic
 ttk.Button(mainframe,text = '经纬度转换为地址', command = to_address).grid(column = 1, row = 3, sticky = ('W' , 'E'))
 ttk.Button(mainframe,text = '地址转换为经纬度', command = to_latlngs).grid(column = 1, row = 4, sticky = ('W' ,  'E'))
 ttk.Label(mainframe,textvariable = runInfo,width = 40).grid(column = 1, row = 5, sticky = ('W' + 'E'))
-ttk.Label(mainframe,text = 'V0.3  数据来源：百度地图',font='helvetica 11').grid(column = 1, row = 7)
+ttk.Label(mainframe,text = 'V0.4  数据来源：百度地图',font='helvetica 11').grid(column = 1, row = 7)
 ttk.Label(mainframe,text = '').grid(column = 1, row = 8, sticky = ('W' , 'E'))
 
 for child in mainframe.winfo_children(): child.grid_configure(padx=5, pady=5)
